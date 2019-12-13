@@ -324,35 +324,36 @@ class phpVimeo
             $params = $all_params;
         }
 
-        if (strtoupper($request_method) == 'GET') {
-            $curl_url = $url.'?'.http_build_query($params, '', '&');
-            $curl_opts = array(
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 30
-            );
-        }
-        else if (strtoupper($request_method) == 'POST') {
-            $curl_url = $url;
-            $curl_opts = array(
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => http_build_query($params, '', '&')
-            );
+        $args = array(
+            'method' => strtoupper($request_method),
+            'body' => $params,
+            'timeout' => 30,
+        );
+
+        if ( $args['method'] === 'GET' ) {
+            $url = $url . '?' . http_build_query( $params );
+            unset( $args['body'] );
         }
 
         // Authorization header
         if ($use_auth_header) {
-            $curl_opts[CURLOPT_HTTPHEADER] = array($this->_generateAuthHeader($oauth_params));
+            $args['headers'] = array($this->_generateAuthHeader($oauth_params));
         }
 
         // Call the API
-        $curl = curl_init($curl_url);
-        curl_setopt_array($curl, $curl_opts);
-        $response = curl_exec($curl);
-        $curl_info = curl_getinfo($curl);
-        curl_close($curl);
+        $result = wp_remote_request( $url, $args );
 
+        if ( is_wp_error( $result ) ) {
+            return false;
+        }
+
+        $responseCode = wp_remote_retrieve_response_code( $result );
+
+        if ( $responseCode !== 200 && $responseCode !== 201 ) {
+            return false;
+        }
+
+        $response = wp_remote_retrieve_body( $result );
         // Cache the response
         if ($this->_cache_enabled && $cache) {
             $this->_cache($all_params, $response);
