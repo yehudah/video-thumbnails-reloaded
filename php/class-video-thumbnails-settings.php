@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /*  Copyright 2013 Sutherland Boswell  (email : sutherland.boswell@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify
@@ -240,6 +240,7 @@ class Video_Thumbnails_Settings {
 				foreach ( $provider->get_test_cases() as $test_case ) {
 					echo '<tr>';
 					echo '<td><strong>' . $test_case['name'] . '</strong></td>';
+					remove_filter('the_content', 'wpautop');
 					$markup = apply_filters( 'the_content', $test_case['markup'] );
 					$result = $video_thumbnails->get_first_thumbnail_url( $markup );
 					if ( is_wp_error( $result ) ) {
@@ -281,10 +282,12 @@ class Video_Thumbnails_Settings {
 
 	function image_download_test_callback() {
 
+		check_admin_referer( 'vtr', 'security' );
+
 		if ( !current_user_can( 'manage_options' ) ) die();
 
 		// Try saving 'http://img.youtube.com/vi/aKAGU2jkaNg/maxresdefault.jpg' to media library
-		$attachment_id = Video_Thumbnails::save_to_media_library( 'http://img.youtube.com/vi/aKAGU2jkaNg/maxresdefault.jpg', 1 );
+		$attachment_id = Video_Thumbnails_Reloaded::save_to_media_library( 'http://img.youtube.com/vi/aKAGU2jkaNg/maxresdefault.jpg', 1 );
 		if ( is_wp_error( $attachment_id ) ) {
 			echo '<p><span style="color:red;">&#10006;</span> ' . $attachment_id->get_error_message() . '</p>';
 		} else {
@@ -323,13 +326,16 @@ class Video_Thumbnails_Settings {
 
 	function markup_detection_test_callback() {
 
+		check_admin_referer( 'vtr', 'security' );
+
 		if ( !current_user_can( 'manage_options' ) ) die();
 
 		$new_thumbnail = null;
 
 		global $video_thumbnails;
 
-		$markup = apply_filters( 'the_content', stripslashes( $_POST['markup'] ) );
+		remove_filter('the_content', 'wpautop');
+		$markup = apply_filters( 'the_content', sanitize_textarea_field( $_POST['markup'] ) );
 
 		$new_thumbnail = $video_thumbnails->get_first_thumbnail_url( $markup );
 
@@ -499,9 +505,11 @@ class Video_Thumbnails_Settings {
 
 		?><div class="wrap">
 
+			<?php echo wp_nonce_field('vtr', 'security'); ?>
+
 			<div id="icon-options-general" class="icon32"></div><h2><?php _e( 'Video Thumbnails Options', 'video-thumbnails' ); ?></h2>
 
-			<?php $active_tab = isset( $_GET[ 'tab' ] ) ? $_GET[ 'tab' ] : 'general_settings'; ?> 
+			<?php $active_tab = isset( $_GET[ 'tab' ] ) ? sanitize_text_field( $_GET[ 'tab' ] ) : 'general_settings'; ?>
 			<h2 class="nav-tab-wrapper">
 				<a href="?page=video_thumbnails&tab=general_settings" class="nav-tab <?php echo $active_tab == 'general_settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'General', 'video-thumbnails' ); ?></a>
 				<a href="?page=video_thumbnails&tab=provider_settings" class="nav-tab <?php echo $active_tab == 'provider_settings' ? 'nav-tab-active' : ''; ?>"><?php _e( 'Providers', 'video-thumbnails' ); ?></a>
@@ -608,7 +616,7 @@ class Video_Thumbnails_Settings {
 
 					<textarea id="markup-input" cols="50" rows="5"></textarea>
 
-					<p><input type="submit" id="test-markup-detection" class="button-primary video-thumbnails-test-button" value="<?php esc_attr_e( 'Scan For Thumbnail', 'video-thumbnails' ); ?>" /></p>
+					<p><input type="submit" data-security="<?php echo wp_create_nonce('vtr'); ?>" id="test-markup-detection" class="button-primary video-thumbnails-test-button" value="<?php esc_attr_e( 'Scan For Thumbnail', 'video-thumbnails' ); ?>" /></p>
 
 					<div id="markup-test-result"></div>
 
@@ -709,7 +717,7 @@ class Video_Thumbnails_Settings {
 			// Support
 			if ( $active_tab == 'support' ) {
 
-				Video_Thumbnails::no_video_thumbnail_troubleshooting_instructions();
+				Video_Thumbnails_Reloaded::no_video_thumbnail_troubleshooting_instructions();
 
 			// End support
 			}

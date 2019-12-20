@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /*  Copyright 2014 Sutherland Boswell  (email : sutherland.boswell@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,6 @@ require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-youtube-thumbnail
 require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-vimeo-thumbnails.php' );
 require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-facebook-thumbnails.php' );
 require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-vine-thumbnails.php' );
-require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-blip-thumbnails.php' );
 require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-dailymotion-thumbnails.php' );
 require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-metacafe-thumbnails.php' );
 require_once( VIDEO_THUMBNAILS_RL_PATH . '/php/providers/class-vk-thumbnails.php' );
@@ -45,7 +44,6 @@ add_filter( 'video_thumbnail_providers', array( 'Youtube_Thumbnails', 'register_
 add_filter( 'video_thumbnail_providers', array( 'Vimeo_Thumbnails', 'register_provider' ) );
 add_filter( 'video_thumbnail_providers', array( 'Facebook_Thumbnails', 'register_provider' ) );
 add_filter( 'video_thumbnail_providers', array( 'Vine_Thumbnails', 'register_provider' ) );
-add_filter( 'video_thumbnail_providers', array( 'Blip_Thumbnails', 'register_provider' ) );
 add_filter( 'video_thumbnail_providers', array( 'Dailymotion_Thumbnails', 'register_provider' ) );
 add_filter( 'video_thumbnail_providers', array( 'Metacafe_Thumbnails', 'register_provider' ) );
 add_filter( 'video_thumbnail_providers', array( 'Vk_Thumbnails', 'register_provider' ) );

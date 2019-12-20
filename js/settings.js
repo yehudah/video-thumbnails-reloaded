@@ -51,7 +51,7 @@ jQuery(function ($) {
 		$('#'+provider_slug+'-provider-test').addClass('test-working');
 		$('#'+provider_slug+'-provider-test .retest-video-provider').val(video_thumbnails_settings_language.working);
 
-		var security = $('#'+provider_slug+'-provider-test').data('security');
+		var security = $('#security').val();
 		var data = {
 			action: 'video_thumbnail_provider_test',
 			provider_slug: provider_slug,
@@ -111,9 +111,12 @@ jQuery(function ($) {
 	$('#test-markup-detection').on('click',function(e) {
 		disable_video_thumbnails_tests();
 		e.preventDefault();
+		
+		var security = jQuery('#security').val();
 		var data = {
 			action: 'video_thumbnail_markup_detection_test',
-			markup: $('#markup-input').val()
+			markup: $('#markup-input').val(),
+			security: security
 		};
 		document.getElementById( 'markup-test-result' ).innerHTML = '<p>' + video_thumbnails_settings_language.working + '</p>';
 		$.ajax({

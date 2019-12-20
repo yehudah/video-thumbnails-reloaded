@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /*  Copyright 2014 Sutherland Boswell  (email : sutherland.boswell@gmail.com)
 
@@ -29,7 +30,7 @@ class Vimeo_Thumbnails extends Video_Thumbnails_Provider {
 	const service_slug = 'vimeo';
 
 	public $options_section = array(
-		'description' => '<p><strong>Optional</strong>: Only required for accessing private videos. <a href="https://developer.vimeo.com/apps">Register an app with Vimeo</a> then fill in the appropriate keys below. Requires cURL to authenticate.</p>',
+		'description' => '<p><strong>Optional</strong>: Only required for accessing private videos. <a href="https://developer.vimeo.com/apps">Register an app with Vimeo</a> then fill in the appropriate keys below.</p>',
 		'fields' => array(
 			'client_id' => array(
 				'name' => 'Client ID',
@@ -577,30 +578,27 @@ class phpVimeo
 
         // Upload each piece
         foreach ($chunks as $i => $chunk) {
-            $params = array(
-                'oauth_consumer_key'     => $this->_consumer_key,
-                'oauth_token'            => $this->_token,
-                'oauth_signature_method' => 'HMAC-SHA1',
-                'oauth_timestamp'        => time(),
-                'oauth_nonce'            => $this->_generateNonce(),
-                'oauth_version'          => '1.0',
-                'ticket_id'              => $ticket,
-                'chunk_id'               => $i
+            $args = array(
+                'headers' => array(
+                    'accept' => 'application/json',
+                    'content-type'  => 'application/binary',
+                ),
+                'body' => array(
+                    'oauth_consumer_key'     => $this->_consumer_key,
+                    'oauth_token'            => $this->_token,
+                    'oauth_signature_method' => 'HMAC-SHA1',
+                    'oauth_timestamp'        => time(),
+                    'oauth_nonce'            => $this->_generateNonce(),
+                    'oauth_version'          => '1.0',
+                    'ticket_id'              => $ticket,
+                    'chunk_id'               => $i,
+                    'oauth_signature' => $this->_generateSignature($params, 'POST', self::API_REST_URL),
+                    'file_data'       => $chunk['file']
+                )
             );
 
-            // Generate the OAuth signature
-            $params = array_merge($params, array(
-                'oauth_signature' => $this->_generateSignature($params, 'POST', self::API_REST_URL),
-                'file_data'       => '@'.$chunk['file'] // don't include the file in the signature
-            ));
-
             // Post the file
-            $curl = curl_init($endpoint);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
-            $rsp = curl_exec($curl);
-            curl_close($curl);
+            wp_remote_post( $endpoint, $args );
         }
 
         // Verify

@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /*  Copyright 2015 Sutherland Boswell  (email : sutherland.boswell@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify

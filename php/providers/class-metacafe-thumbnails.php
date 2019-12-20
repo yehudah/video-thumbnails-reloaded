@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /*  Copyright 2014 Sutherland Boswell  (email : sutherland.boswell@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify
@@ -35,32 +35,34 @@ class Metacafe_Thumbnails extends Video_Thumbnails_Provider {
 
 	// Regex strings
 	public $regexes = array(
-		'#http://www\.metacafe\.com/fplayer/([A-Za-z0-9\-_]+)/#' // Metacafe embed
+		'/src="https:\/\/www.metacafe.com\/embed\/(\d+)\/.*"/' // Metacafe iFrame
 	);
 
 	// Thumbnail URL
 	public function get_thumbnail_url( $id ) {
-		$request = "http://www.metacafe.com/api/item/$id/";
-		$response = wp_remote_get( $request );
-		if( is_wp_error( $response ) ) {
-			$result = $this->construct_info_retrieval_error( $request, $response );
-		} else {
-			$xml = new SimpleXMLElement( $response['body'] );
-			$result = $xml->xpath( "/rss/channel/item/media:thumbnail/@url" );
-			$result = (string) $result[0]['url'];
-			$result = $this->drop_url_parameters( $result );
-		}
+		$endpoint = $this->get_thumb_base();
+		$base = $this->get_base_id($id);
+		$result = str_replace( array( '{base}', '{id}'), array( $base, $id ), $endpoint );
+
 		return $result;
+	}
+
+	private function get_thumb_base() {
+		return 'https://cdn.mcstatic.com/contents/videos_screenshots/{base}/{id}/preview.jpg';
+	}
+
+	private function get_base_id($id) {
+		return substr($id, 0, -3) . '000';
 	}
 
 	// Test cases
 	public static function get_test_cases() {
 		return array(
 			array(
-				'markup'        => '<embed flashVars="playerVars=autoPlay=no" src="http://www.metacafe.com/fplayer/8456223/men_in_black_3_trailer_2.swf" width="440" height="248" wmode="transparent" allowFullScreen="true" allowScriptAccess="always" name="Metacafe_8456223" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash"></embed>',
-				'expected'      => 'http://s4.mcstatic.com/thumb/8456223/22479418/4/catalog_item5/0/1/men_in_black_3_trailer_2.jpg',
-				'expected_hash' => '977187bfb00df55b39724d7de284f617',
-				'name'          => __( 'Flash Embed', 'video-thumbnails' )
+				'markup'        => '<iframe width="560" height="315" src="https://www.metacafe.com/embed/11999155/probably-the-cutest-alligator-in-existence/" frameborder="0" allowfullscreen></iframe>',
+				'expected'      => 'https://cdn.mcstatic.com/contents/videos_screenshots/11999000/11999155/preview.jpg',
+				'expected_hash' => '23b1e34a4bdcd4e37b99eb46ac34b197',
+				'name'          => __( 'iFrame Embed', 'video-thumbnails' )
 			),
 		);
 	}

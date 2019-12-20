@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /*
 Plugin Name: Video Thumbnails Reloaded
 Plugin URI: https://wpplugins.net/video-thumbnails-reloaded/
@@ -10,8 +11,20 @@ License: GPL2
 Text Domain: video-thumbnails
 Domain Path: /languages/
 */
-/*
-Video Thumbnails was originally developed by Sutherland Boswell
+/*  Copyright 2015 Sutherland Boswell  (email : sutherland.boswell@gmail.com)
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2, as
+	published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 // Define
@@ -60,7 +73,7 @@ class Video_Thumbnails_Reloaded {
 
 		// Add action for Ajax reset script on edit pages
 		if ( in_array( basename( $_SERVER['PHP_SELF'] ), apply_filters( 'video_thumbnails_editor_pages', array( 'post-new.php', 'page-new.php', 'post.php', 'page.php' ) ) ) ) {
-			add_action( 'admin_head', array( $this, 'ajax_reset_script' ) );
+			add_action( 'admin_footer', array( $this, 'ajax_reset_script' ) );
 		}
 
 		// Add action for Ajax reset callback
@@ -287,6 +300,7 @@ class Video_Thumbnails_Reloaded {
 				} else {
 					$post_array = get_post( $post_id );
 					$markup = $post_array->post_content;
+					remove_filter('the_content', 'wpautop');
 					$markup = apply_filters( 'the_content', $markup );
 				}
 
@@ -452,26 +466,24 @@ class Video_Thumbnails_Reloaded {
 		?>
         <!-- Video Thumbnails Ajax Search -->
         <script type="text/javascript">
-            var vtr = document.querySelectorAll('.video-thumbnails-reset');
+            var vtr = jQuery('.video-thumbnails-reset');
 
-            vtr.forEach(function (link) {
-               link.addEventListener('click', function (e) {
-                   e.preventDefault();
+			vtr.on( 'click', function(e) {
+				e.preventDefault();
 
-                    var id = this.dataset.id;
-                    var security = this.dataset.security;
+				var id = this.dataset.id;
+				var security = this.dataset.security;
 
-                    var data = {
-                        action: 'reset_video_thumbnail',
-                        post_id: id,
-                        security: security
-                    };
-                   document.getElementById('video-thumbnails-preview').innerHTML = 'Working... ';
-                   jQuery.post(ajaxurl, data, function(response){
-                       document.getElementById('video-thumbnails-preview').innerHTML = response;
-                   });
-               });
-            });
+				var data = {
+					action: 'reset_video_thumbnail',
+					post_id: id,
+					security: security
+				};
+				document.getElementById('video-thumbnails-preview').innerHTML = 'Working... ';
+				jQuery.post(ajaxurl, data, function(response){
+					document.getElementById('video-thumbnails-preview').innerHTML = response;
+				});
+			})
         </script>
         <?php
 	}
@@ -481,7 +493,7 @@ class Video_Thumbnails_Reloaded {
 	 */
 	function ajax_reset_callback() {
 
-	    check_admin_referer('vtr', 'security' );
+	    check_admin_referer( 'vtr', 'security' );
 
 		global $wpdb; // this is how you get access to the database
 
@@ -506,7 +518,8 @@ class Video_Thumbnails_Reloaded {
 	 * Ajax callback used to get all the post IDs to be scanned in bulk
 	 */
 	function bulk_posts_query_callback() {
-        check_admin_referer( 'vtr', $_POST['params']['security'] );
+		
+        check_admin_referer( 'vtr', 'security' );
 
 		// Some default args
 		$args = array(
@@ -515,13 +528,10 @@ class Video_Thumbnails_Reloaded {
 			'fields'    => 'ids'
 		);
 
-        // Setup an array for any form data and parse the jQuery serialized data
-        $form_data = array();
-        parse_str( $_POST['params'], $form_data );
-
-		$args = apply_filters( 'video_thumbnails/bulk_posts_query', $args, $form_data );
+		$args = apply_filters( 'video_thumbnails/bulk_posts_query', $args );
 
 		$query = new WP_Query( $args );
+
 		echo json_encode( $query->posts );
 		die();
 	}
@@ -530,6 +540,8 @@ class Video_Thumbnails_Reloaded {
 	 * Ajax callback used to get the video thumbnail for an individual post in the process of running the bulk tool
 	 */
 	function get_thumbnail_for_post_callback() {
+
+		check_admin_referer( 'vtr', 'security' );
 
 		$post_id = absint($_POST['post_id']);
 		$thumb = get_post_meta( $post_id, VIDEO_THUMBNAILS_RL_FIELD, true );
@@ -638,7 +650,7 @@ add_action( 'plugins_loaded', function() {
     if ( ! function_exists('video_thumbnail') ) {
         function video_thumbnail($post_id = null) {
             if (($video_thumbnail = get_video_thumbnail($post_id)) == null) {
-                echo plugins_url() . '/video-thumbnails-reloaded/default.jpg';
+                echo plugins_url( '', __FILE__ ) . '/default.jpg';
             } else {
                 echo $video_thumbnail;
             }

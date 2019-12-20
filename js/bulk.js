@@ -29,9 +29,11 @@ jQuery(function ($) {
 	};
 
 	VideoThumbnailsBulkScanner.prototype.findPosts = function(text) {
+		var security = jQuery('#security').val();
 		var data = {
 			action: 'video_thumbnails_bulk_posts_query',
-			params: $('#video-thumbnails-bulk-scan-options').serialize()
+			params: $('#video-thumbnails-bulk-scan-options').serialize(),
+			security: security,
 		};
 		var self = this;
 		this.disableSubmit();
@@ -140,10 +142,12 @@ jQuery(function ($) {
 		if ( this.currentItem < this.posts.length ) {
 
 			this.log( '[ID: ' + this.posts[this.currentItem] + '] ' + this.language.scanning_of.replace('%1$s',this.currentItem+1).replace('%2$s',this.posts.length) );
-
+			
+			var security = jQuery('#security').val();
 			var data = {
 				action: 'video_thumbnails_get_thumbnail_for_post',
-				post_id: this.posts[this.currentItem]
+				post_id: this.posts[this.currentItem],
+				security: security
 			};
 			var self = this;
 			$.ajax({

@@ -14,7 +14,8 @@ Video Thumbnails simplifies the process of automatically displaying video thumbn
 
 Video Thumbnails makes it easy to automatically display video thumbnails in your template. When you publish a post, this plugin will find the first video embedded and retrieve a thumbnail for you. Thumbnails can be saved to your media library and set as a featured image automatically. There's even support for custom post types and custom fields!
 
-Video Thumbnails was originally developed by Sutherland Boswell
+Video Thumbnails Reloaded is based on Video Thumbnails developed by Sutherland Boswell
+(https://wordpress.org/plugins/video-thumbnails/)
 
 = Supported Sites =
 
